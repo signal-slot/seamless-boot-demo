@@ -1,0 +1,8 @@
+[Plymouth Theme]
+Name=ASTRA Ground Control
+Description=Satellite ground-control demo boot splash.
+ModuleName=script
+
+[script]
+ImageDir=/usr/share/plymouth/themes/astra
+ScriptFile=/usr/share/plymouth/themes/astra/astra.script
