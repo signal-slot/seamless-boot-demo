@@ -14,13 +14,16 @@ qt_add_executable(astra-demo
 )
 
 file(GLOB IMAGE_FILES CONFIGURE_DEPENDS "qml/images/*.png")
+# The device runtime container ships NO fonts at all, so the app embeds its own
+# (open SIL-OFL fonts: Jost for the latin UI, Noto Sans JP for Japanese).
+file(GLOB FONT_FILES CONFIGURE_DEPENDS "qml/fonts/*.ttf")
 
 # Flatten resource paths: every file sits directly under /qt/qml/AstraDemo/
 # (the qml/ prefix is stripped), so QML sees images/sat.png etc.
 set_source_files_properties(qml/Main.qml          PROPERTIES QT_RESOURCE_ALIAS Main.qml)
 set_source_files_properties(qml/GroundControl.qml PROPERTIES QT_RESOURCE_ALIAS GroundControl.qml)
 set_source_files_properties(qml/OrbitTrace.js     PROPERTIES QT_RESOURCE_ALIAS OrbitTrace.js)
-foreach(img ${IMAGE_FILES})
+foreach(img ${IMAGE_FILES} ${FONT_FILES})
     file(RELATIVE_PATH alias "${CMAKE_CURRENT_SOURCE_DIR}/qml" "${img}")
     set_source_files_properties("${img}" PROPERTIES QT_RESOURCE_ALIAS "${alias}")
 endforeach()
@@ -34,6 +37,7 @@ qt_add_qml_module(astra-demo
         qml/OrbitTrace.js
     RESOURCES
         ${IMAGE_FILES}
+        ${FONT_FILES}
 )
 
 target_link_libraries(astra-demo PRIVATE Qt6::Quick Qt6::Gui Qt6::Qml)

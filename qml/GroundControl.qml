@@ -33,9 +33,18 @@ Rectangle {
         width: parent.width; height: 64
         Image { source: "images/qtlogo.png"; x: 20; y: 14; width: 49; height: 36; smooth: true }
         Text {
+            id: title
             x: 84; anchors.verticalCenter: parent.verticalCenter
             text: "ASTRA GROUND CONTROL"
             color: "white"; font.pixelSize: 20; font.letterSpacing: 4
+            font.family: "Jost"
+        }
+        Text {
+            anchors.left: title.right; anchors.leftMargin: 16
+            anchors.verticalCenter: parent.verticalCenter
+            text: "衛星地上管制"
+            color: root.dim; font.pixelSize: 14
+            font.family: "Noto Sans JP"
         }
         Rectangle {
             x: 530; anchors.verticalCenter: parent.verticalCenter
@@ -59,7 +68,7 @@ Rectangle {
             id: clock
             anchors.right: parent.right; anchors.rightMargin: 24
             anchors.verticalCenter: parent.verticalCenter
-            color: root.dim; font.pixelSize: 16; font.family: "monospace"
+            color: root.dim; font.pixelSize: 16; font.family: "Jost"
             property int t: 49500   // fake mission clock, seconds
             text: "MET " + Math.floor(t / 3600) + ":" +
                   String(Math.floor(t / 60) % 60).padStart(2, "0") + ":" +
@@ -100,7 +109,7 @@ Rectangle {
         Text {
             anchors.bottom: parent.bottom; anchors.left: parent.left
             anchors.margins: 14
-            color: root.dim; font.pixelSize: 12; font.family: "monospace"
+            color: root.dim; font.pixelSize: 12; font.family: "Jost"
             text: "ALT 547.2 km   INC 97.6°   PERIOD 95.4 min"
         }
     }
@@ -138,7 +147,7 @@ Rectangle {
             Text {
                 id: rssi
                 anchors.bottom: parent.bottom; anchors.horizontalCenter: parent.horizontalCenter
-                color: "white"; font.pixelSize: 15; font.family: "monospace"
+                color: "white"; font.pixelSize: 15; font.family: "Jost"
                 property real db: -92.4
                 text: "S-BAND  " + db.toFixed(1) + " dBm"
                 Timer {
@@ -177,7 +186,7 @@ Rectangle {
         }
         Text {
             x: 16; anchors.bottom: parent.bottom; anchors.bottomMargin: 34
-            color: root.dim; font.pixelSize: 12; font.family: "monospace"
+            color: root.dim; font.pixelSize: 12; font.family: "Jost"
             text: "BUS 28.1 V   SOLAR 412 W"
         }
     }
@@ -196,13 +205,13 @@ Rectangle {
                     spacing: 14
                     Text {
                         text: modelData[0]; color: root.dim
-                        font.pixelSize: 14; font.family: "monospace"; width: 64
+                        font.pixelSize: 14; font.family: "Jost"; width: 64
                     }
                     Text {
                         id: axis
                         property real v: modelData[1]
                         text: (v >= 0 ? "+" : "") + v.toFixed(2) + "°"
-                        color: "white"; font.pixelSize: 18; font.family: "monospace"
+                        color: "white"; font.pixelSize: 18; font.family: "Jost"
                         Timer {
                             interval: 800 + index * 170; running: true; repeat: true
                             onTriggered: axis.v += (Math.random() - 0.5) * 0.06
@@ -231,7 +240,7 @@ Rectangle {
         }
         Text {
             x: 16; anchors.bottom: parent.bottom; anchors.bottomMargin: 14
-            color: root.dim; font.pixelSize: 12; font.family: "monospace"
+            color: root.dim; font.pixelSize: 12; font.family: "Jost"
             text: "RADIATOR OK   HEATER OFF"
         }
     }
@@ -250,6 +259,8 @@ Rectangle {
             "GS pass AOS in 00:12:%1",
             "Reaction wheel #2 speed trim: %1 rpm",
             "Payload imager idle (next window %1 min)",
+            "テレメトリ受信 OK (フレーム %1)",
+            "次のパスまで %1 分 — 地上局: 仙台",
             "Battery charge mode: taper (%1 mA)",
             "Star tracker lock: 14 stars, q=0.99%1"
         ]
@@ -277,7 +288,7 @@ Rectangle {
                 text: line
                 color: "#a8e6ef"
                 font.pixelSize: 14
-                font.family: "monospace"
+                font.family: "Jost"
             }
         }
     }

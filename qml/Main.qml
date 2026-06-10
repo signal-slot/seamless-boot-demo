@@ -19,6 +19,11 @@ Window {
     // near-invisible position marker). -1 = unknown -> sweep starts at 0.
     property int satStartIndex: -1
 
+    // The device runtime ships no fonts at all — embed our own (SIL-OFL).
+    FontLoader { source: "fonts/Jost-Regular.ttf" }
+    FontLoader { source: "fonts/Jost-Medium.ttf" }
+    FontLoader { source: "fonts/NotoSansJP-VariableFont_wght.ttf" }
+
     Loader {
         id: ui
         anchors.fill: parent
