@@ -44,8 +44,7 @@ PCX, PCY, PR = 640, 395, 100              # planet
 def font(size, bold=False):
     from PIL import ImageFont
     cands = [
-        os.path.join(HERE, "..", "adtec", "mera", "qttrainingexample",
-                     "qml", "fonts", "static",
+        os.path.join(HERE, "qml", "fonts",
                      "Jost-Medium.ttf" if bold else "Jost-Regular.ttf"),
         "/usr/share/fonts/dejavu/DejaVuSans%s.ttf" % ("-Bold" if bold else ""),
         "/usr/share/fonts/truetype/dejavu/DejaVuSans%s.ttf" % ("-Bold" if bold else ""),
