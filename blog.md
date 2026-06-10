@@ -114,14 +114,17 @@ static void deactivatePlymouth()
 
 eglfs は初回フレームで MODE_ID / ACTIVE プロパティを atomic コミットに積みますが、DRM コアは**モードの内容**を比較し([`drm_mode_equal()`](https://elixir.bootlin.com/linux/latest/source/drivers/gpu/drm/drm_modes.c))、現在のモードと同一なら `mode_changed = false`、つまり**プレーン更新のみ**として処理します([`drm_atomic_helper_check_modeset()`](https://elixir.bootlin.com/linux/latest/source/drivers/gpu/drm/drm_atomic_helper.c))。パネルの再プログラム(≒1 フレームのブランク)は発生しません。
 
-Plymouth も Qt も同じコネクタの preferred mode を選ぶので、実機ではこの条件が自然に成立します。ブートログで確認すると:
+Plymouth も Qt も同じコネクタの preferred mode を選ぶので、実機ではこの条件が自然に成立します。アプリのログはこういう時系列になります。
 
 ```
 [boot] +13ms Plymouth deactivated (alive, DRM released)
 [boot] +734ms QML loaded
 ```
 
-の間、パネルには Plymouth の最終フレームが出続け、Qt の初回フレームが page-flip でそれを置き換えます。黒フレームはゼロです。
+ただし、これは**自分のアプリが自分で出しているログ**なので、「黒が出ていない」ことの証明にはなりません。検証は次の 2 つで行います。
+
+- **目視/動画**: 実機の電源サイクルを撮影し、黒フレームが挟まらないことを確認する(冒頭の動画)
+- **カーネル側のログ**: カーネル引数に [`drm.debug=0x14`](https://docs.kernel.org/gpu/drm-internals.html#drm-debug-and-logging)(KMS + atomic)を足してブートすると、ハンドオフ区間のコミットがカーネルのログとして残ります。黒が出るには CRTC の disable か full modeset が必要ですが、この区間には **plane 更新しか現れません**。自前ログと違い、こちらは独立した証拠になります
 
 ## 解法 2: アニメーションの位相を引き継ぐ
 
@@ -240,6 +243,8 @@ Item {
 [boot] +32ms sweep phase from KMS: index 43        ← 読み戻し+デコードは ~20ms
 [boot] +734ms QML loaded
 ```
+
+この index は**ブートのたびに違う値**になります(手元では 43、144、212 …)。systemd の起動タイミングの揺らぎで Plymouth のアニメ進行が毎回異なるためで、毎回違う値が正しくデコードされてアニメが繋がること自体が「画面から読めている」ことの傍証になります(固定値を出しているだけなら毎回同じになるはずです)。最終的な確認は、やはり実機でアニメーションが途切れないことの目視/動画です。
 
 ## 改善後の遷移(全体像)
 
