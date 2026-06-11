@@ -78,21 +78,31 @@ Window {
             }
         }
 
-        // Qt logo, top-left: fades in as soon as the Qt-side splash starts —
-        // which also makes the Plymouth -> Qt hand-off moment visible.
-        Image {
-            source: "images/qtlogo.png"
-            x: 24
-            y: 24
-            width: 76
-            height: 56
-            smooth: true
-            opacity: 0
-            NumberAnimation on opacity { from: 0; to: 1; duration: 800; running: true }
-        }
     }
 
-    // Hold the splash briefly, then load the dashboard and cross-fade.
+    // Qt logo, top-left — a single "hero" element shared by the splash and the
+    // dashboard. It fades in when the Qt-side splash starts (making the
+    // Plymouth -> Qt hand-off moment visible), then GLIDES from its splash
+    // geometry to the dashboard-header geometry while the layers cross-fade
+    // underneath. GroundControl.qml draws no logo of its own.
+    Image {
+        id: heroLogo
+        source: "images/qtlogo.png"
+        x: 24
+        y: 24
+        width: 76
+        height: 56
+        smooth: true
+        opacity: 0
+        NumberAnimation on opacity { from: 0; to: 1; duration: 800; running: true }
+        Behavior on x      { NumberAnimation { duration: 450; easing.type: Easing.InOutCubic } }
+        Behavior on y      { NumberAnimation { duration: 450; easing.type: Easing.InOutCubic } }
+        Behavior on width  { NumberAnimation { duration: 450; easing.type: Easing.InOutCubic } }
+        Behavior on height { NumberAnimation { duration: 450; easing.type: Easing.InOutCubic } }
+    }
+
+    // Hold the splash briefly, then load the dashboard and cross-fade while
+    // the hero logo glides to its header position.
     Timer {
         interval: 5000
         running: true
@@ -101,6 +111,12 @@ Window {
     }
     Connections {
         target: ui
-        function onLoaded() { splash.opacity = 0 }
+        function onLoaded() {
+            splash.opacity = 0
+            heroLogo.x = 20
+            heroLogo.y = 14
+            heroLogo.width = 49
+            heroLogo.height = 36
+        }
     }
 }

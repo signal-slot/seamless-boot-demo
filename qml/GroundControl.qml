@@ -31,7 +31,9 @@ Rectangle {
     Item {
         id: header
         width: parent.width; height: 64
-        Image { source: "images/qtlogo.png"; x: 20; y: 14; width: 49; height: 36; smooth: true }
+        // The Qt logo here is the hero element owned by Main.qml — it glides
+        // from the splash into this spot (x:20 y:14 49x36) during the
+        // cross-fade, so this header draws no logo of its own.
         Text {
             id: title
             x: 84; anchors.verticalCenter: parent.verticalCenter
