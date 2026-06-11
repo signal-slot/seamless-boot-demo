@@ -10,6 +10,7 @@
 
 #include <QGuiApplication>
 #include <QQmlApplicationEngine>
+#include <QQuickWindow>
 #include <QElapsedTimer>
 #include <QDebug>
 
@@ -28,12 +29,19 @@
 #  define HAVE_LIBDRM 1
 #endif
 
-// Tell Plymouth to DEACTIVATE (not quit) and wait for the ACK. Quit would free
-// the splash framebuffer (the kernel then force-disables the CRTC -> black);
-// deactivate drops DRM master while plymouthd stays alive holding its frame.
-// Wire format (ply-boot-protocol): a request with no argument is the command
-// char + NUL -> DEACTIVATE ('D') is { 'D', 0x00 }; the daemon replies ACK 0x06.
-static void deactivatePlymouth()
+// Send Plymouth a no-argument request and wait for the ACK. Wire format
+// (ply-boot-protocol): the command char + NUL; the daemon replies ACK 0x06.
+//
+// Boot uses two of them:
+//   'D' DEACTIVATE  at startup — plymouthd drops DRM master but stays alive
+//                   holding its frame, which is what makes the hand-off
+//                   black-free (quitting here would free the FB -> black).
+//   'Q' QUIT        after OUR first frame is on screen — the CRTC scans our
+//                   buffer now, so freeing the daemon's FB cannot blank, and
+//                   nothing else stops it (plymouth-quit.service is masked on
+//                   this image; a deactivated plymouthd keeps its splash
+//                   refresh loop spinning at ~25% CPU forever).
+static void plymouthRequest(char cmd)
 {
     const int fd = ::socket(AF_UNIX, SOCK_STREAM, 0);
     if (fd < 0)
@@ -50,10 +58,10 @@ static void deactivatePlymouth()
     const socklen_t len = offsetof(struct sockaddr_un, sun_path) + 1 + (sizeof(name) - 1);
 
     if (::connect(fd, reinterpret_cast<struct sockaddr *>(&addr), len) == 0) {
-        const unsigned char request[] = { 'D', 0x00 };
+        const unsigned char request[] = { (unsigned char)cmd, 0x00 };
         if (::write(fd, request, sizeof(request)) == (ssize_t)sizeof(request)) {
             char ack = 0;
-            const ssize_t n = ::read(fd, &ack, 1); // ACK -> master dropped, frame kept
+            const ssize_t n = ::read(fd, &ack, 1);
             (void)n;
         }
     }
@@ -152,7 +160,7 @@ int main(int argc, char *argv[])
     QElapsedTimer boot;
     boot.start();
 
-    deactivatePlymouth();
+    plymouthRequest('D');
     qInfo().nospace() << "[boot] +" << boot.elapsed() << "ms Plymouth deactivated (alive, DRM released)";
 
     const int satStartIndex = readSatStartIndex();
@@ -167,6 +175,15 @@ int main(int argc, char *argv[])
     if (engine.rootObjects().isEmpty())
         return -1;
     qInfo().nospace() << "[boot] +" << boot.elapsed() << "ms QML loaded";
+
+    // Once our first frame has actually been presented, the hand-off is over —
+    // quit the (deactivated, CPU-burning) plymouthd for real.
+    if (auto *win = qobject_cast<QQuickWindow *>(engine.rootObjects().first())) {
+        QObject::connect(win, &QQuickWindow::frameSwapped, &app, [&boot] {
+            plymouthRequest('Q');
+            qInfo().nospace() << "[boot] +" << boot.elapsed() << "ms Plymouth quit (first frame is up)";
+        }, static_cast<Qt::ConnectionType>(Qt::QueuedConnection | Qt::SingleShotConnection));
+    }
 
     return app.exec();
 }
