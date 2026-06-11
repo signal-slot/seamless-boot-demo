@@ -132,11 +132,30 @@ def build_background(pts):
             font=f2, fill=(255, 255, 255, 130))
 
     bg.convert("RGB").save(os.path.join(TS, "background.png"))
-    bg.convert("RGB").save(os.path.join(QI, "splashbg.png"))
+
+    # App-side splash background WITHOUT the planet/orbit: those live in the
+    # separate map.png layer (see build_map), which the QML splash composites
+    # on top as the "hero" element that later shrinks into the ORBIT TRACK
+    # card. base ⊕ map is pixel-identical to the full theme background (the
+    # planet/orbit region does not overlap any text), so the Plymouth hand-off
+    # stays seamless.
+    base = Image.fromarray(np.clip(rgb, 0, 255).astype(np.uint8), "RGB").convert("RGBA")
+    base.alpha_composite(stars)
+    dr = ImageDraw.Draw(base)
+    dr.text((W / 2 - dr.textlength(s, font=ttl) / 2, 96), s, font=ttl,
+            fill=(255, 255, 255, 170))
+    dr.text((W / 2 - dr.textlength(s1, font=f1) / 2, H * 0.745), s1,
+            font=f1, fill=(255, 255, 255, 195))
+    dr.text((W / 2 - dr.textlength(s2, font=f2) / 2, H * 0.835), s2,
+            font=f2, fill=(255, 255, 255, 130))
+    base.convert("RGB").save(os.path.join(QI, "splashbg.png"))
 
 
 def build_map(pts):
-    """Transparent planet+orbit layer for the dashboard's ORBIT TRACK card."""
+    """Transparent planet+orbit layer — drawn EXACTLY like the background's
+    planet/orbit so that splashbg.png ⊕ map.png reproduces the theme
+    background pixel-for-pixel. The QML hero element shows it full-screen
+    during the splash, then shrinks it into the ORBIT TRACK card."""
     m = Image.new("RGBA", (W, H), (0, 0, 0, 0))
     py, px = np.mgrid[0:H, 0:W]
     rr = np.sqrt((px - PCX) ** 2 + (py - PCY) ** 2)
@@ -148,7 +167,8 @@ def build_map(pts):
     col[:, :, 3] = np.clip((PR - rr) / 1.5, 0, 1) * 255
     m.alpha_composite(Image.fromarray(col.astype(np.uint8), "RGBA"))
     line = Image.new("RGBA", (W, H), (0, 0, 0, 0))
-    ImageDraw.Draw(line).line(pts + [pts[0]], fill=CYAN + (90,), width=4, joint="curve")
+    ImageDraw.Draw(line).line(pts + [pts[0]], fill=CYAN + (60,), width=3, joint="curve")
+    m.alpha_composite(glow(line, 5, 1.1))
     m.alpha_composite(line)
     m.save(os.path.join(QI, "map.png"))
 

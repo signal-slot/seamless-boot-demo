@@ -86,28 +86,10 @@ Rectangle {
         x: 20; y: header.height
         width: 600; height: 420
 
-        // Pre-rendered planet + orbit layer (gen.py emits map.png) — no Canvas.
-        Image {
-            id: map
-            anchors.fill: parent
-            anchors.margins: 16
-            anchors.topMargin: 40
-            source: "images/map.png"
-            smooth: true
-        }
-        Image {
-            id: sat
-            source: "images/sat.png"
-            width: 40; height: 40
-            property real head: 0
-            NumberAnimation on head {
-                from: 0; to: Orbit.n; duration: 8000
-                loops: Animation.Infinite; running: true
-            }
-            readonly property int idx: Math.floor(head) % Orbit.n
-            x: map.x + Orbit.tx[idx] * map.width / 1280 - width / 2
-            y: map.y + Orbit.ty[idx] * map.height / 800 - height / 2
-        }
+        // The orbit scene (planet + orbit + sweeping satellite) is the hero
+        // element owned by Main.qml: it shrinks from full screen into this
+        // card's map area (inset 16/40) during the transition and lives there
+        // afterwards — the card itself draws only the frame and the captions.
         Text {
             anchors.bottom: parent.bottom; anchors.left: parent.left
             anchors.margins: 14
